@@ -10,25 +10,22 @@ import {
   View
 } from "react-native";
 
-export default function LoginScreen() {
+export default function ForgotPasswordScreen() {
   const router = useRouter();
-  const [user, setUser] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [success, setSuccess] = useState("");
 
-  const validateEmail = (email: string) => {
-    return /\S+@\S+\.\S+/.test(email);
-  };
+  const validateEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
 
-  const handleLogin = async () => {
+  const handleReset = async () => {
     setError("");
+    setSuccess("");
     setLoading(true);
 
-    if (!user || !email || !password) {
-      setError("Preencha todos os campos.");
+    if (!email) {
+      setError("Informe seu email.");
       setLoading(false);
       return;
     }
@@ -39,37 +36,20 @@ export default function LoginScreen() {
       return;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Simula envio do e-mail
+    await new Promise((r) => setTimeout(r, 1000));
 
-    if (
-      user === "user example" &&
-      email === "user@example.com" &&
-      password === "senha123"
-    ) {
-      router.replace("/diary/diary");
-    } else {
-      setError("Email ou senha inválidos");
-    }
-
+    setSuccess("Enviamos um link de recuperação para o seu email.");
     setLoading(false);
   };
 
   return (
     <KeyboardAvoidingView style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Bem Vindo {user}</Text>
+        <Text style={styles.title}>Recuperar Senha</Text>
 
         <TextInput
-          placeholder="nome de usuário"
-          value={user}
-          onChangeText={setUser}
-          style={styles.input}
-          keyboardType="default"
-          autoCapitalize="none"
-        />
-
-        <TextInput
-          placeholder="email"
+          placeholder="Digite seu email"
           value={email}
           onChangeText={setEmail}
           style={styles.input}
@@ -77,34 +57,23 @@ export default function LoginScreen() {
           autoCapitalize="none"
         />
 
-        <TextInput
-          placeholder="senha"
-          value={password}
-          onChangeText={setPassword}
-          style={styles.input}
-          secureTextEntry={!showPassword}
-        />
-
         {error ? <Text style={styles.error}>{error}</Text> : null}
+        {success ? <Text style={styles.success}>{success}</Text> : null}
 
         <TouchableOpacity
-          onPress={handleLogin}
+          onPress={handleReset}
           style={[styles.button, loading && { opacity: 0.6 }]}
           disabled={loading}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>Log In</Text>
+            <Text style={styles.buttonText}>Enviar link</Text>
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.push("/login/Screens/register")}>
-          <Text style={styles.link}>Criar conta</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => router.push("/login/Screens/forgot-password")}>
-          <Text style={styles.link}>Esqueceu a senha?</Text>
+        <TouchableOpacity onPress={() => router.push("/login/Screens/loginScreen")}>
+          <Text style={styles.link}>Voltar ao login</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -124,16 +93,12 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 12,
     elevation: 4,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 24,
     textAlign: "center",
-    color: "#333",
   },
   input: {
     borderWidth: 1,
@@ -150,11 +115,16 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontWeight: "bold",
     textAlign: "center",
+    fontWeight: "bold",
   },
   error: {
     color: "red",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  success: {
+    color: "green",
     textAlign: "center",
     marginBottom: 10,
   },
@@ -162,6 +132,5 @@ const styles = StyleSheet.create({
     color: "#007AFF",
     textAlign: "center",
     marginTop: 10,
-    fontWeight: "600",
   },
 });

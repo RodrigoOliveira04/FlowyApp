@@ -1,4 +1,6 @@
 import { useRouter } from "expo-router";
+import { todayLocalISO } from "@/src/utils/date";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -9,67 +11,65 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
+import { useAuth } from "@/src/contexts/register/AuthContext";
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const router = useRouter();
   const [user, setUser] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
-  const validateEmail = (email: string) => {
-    return /\S+@\S+\.\S+/.test(email);
+  const today = todayLocalISO();
+  const [date] = useState(today);
+
+  const validateEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
+
+  const { register } = useAuth();
+
+const handleRegister = async () => {
+  if (!user || !email || !password) {
+    setError("Preencha todos os campos.");
+    return;
+  }
+
+  const newUser = {
+    username: user,
+    email: email,
+    password: password,
+    createdAt: new Date().toISOString(),
   };
 
-  const handleLogin = async () => {
-    setError("");
-    setLoading(true);
+  await AsyncStorage.setItem("user_data", JSON.stringify(newUser));
 
-    if (!user || !email || !password) {
-      setError("Preencha todos os campos.");
-      setLoading(false);
-      return;
-    }
+  router.replace("/login/Screens/loginScreen");
+};
 
-    if (!validateEmail(email)) {
-      setError("Digite um email válido.");
-      setLoading(false);
-      return;
-    }
+const saved = await AsyncStorage.getItem("user_data");
+if (saved) {
+  const user = JSON.parse(saved);
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    if (
-      user === "user example" &&
-      email === "user@example.com" &&
-      password === "senha123"
-    ) {
-      router.replace("/diary/diary");
-    } else {
-      setError("Email ou senha inválidos");
-    }
-
-    setLoading(false);
-  };
+  if (user.email === email && user.password === password) {
+    // login OK
+  }
+};
 
   return (
     <KeyboardAvoidingView style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Bem Vindo {user}</Text>
+        <Text style={styles.title}>Criar Conta</Text>
 
         <TextInput
-          placeholder="nome de usuário"
+          placeholder="Nome de usuário"
           value={user}
           onChangeText={setUser}
           style={styles.input}
-          keyboardType="default"
-          autoCapitalize="none"
         />
 
         <TextInput
-          placeholder="email"
+          placeholder="Email"
           value={email}
           onChangeText={setEmail}
           style={styles.input}
@@ -78,33 +78,37 @@ export default function LoginScreen() {
         />
 
         <TextInput
-          placeholder="senha"
+          placeholder="Senha"
+          secureTextEntry
           value={password}
           onChangeText={setPassword}
           style={styles.input}
-          secureTextEntry={!showPassword}
+        />
+
+        <TextInput
+          placeholder="Confirmar senha"
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          style={styles.input}
         />
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <TouchableOpacity
-          onPress={handleLogin}
+          onPress={handleRegister}
           style={[styles.button, loading && { opacity: 0.6 }]}
           disabled={loading}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>Log In</Text>
+            <Text style={styles.buttonText}>Registrar</Text>
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.push("/login/Screens/register")}>
-          <Text style={styles.link}>Criar conta</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => router.push("/login/Screens/forgot-password")}>
-          <Text style={styles.link}>Esqueceu a senha?</Text>
+        <TouchableOpacity onPress={() => router.push("/login/Screens/loginScreen")}>
+          <Text style={styles.link}>Já tem conta? Faça login</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -124,16 +128,12 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 12,
     elevation: 4,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 24,
     textAlign: "center",
-    color: "#333",
   },
   input: {
     borderWidth: 1,
@@ -162,6 +162,5 @@ const styles = StyleSheet.create({
     color: "#007AFF",
     textAlign: "center",
     marginTop: 10,
-    fontWeight: "600",
   },
 });
