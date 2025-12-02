@@ -1,8 +1,7 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
+  Alert,
   StyleSheet,
   Text,
   TextInput,
@@ -13,124 +12,94 @@ import {
 export default function ForgotPasswordScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState("");
 
-  const validateEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
-
-  const handleReset = async () => {
-    setError("");
-    setSuccess("");
-    setLoading(true);
-
-    if (!email) {
-      setError("Informe seu email.");
-      setLoading(false);
+  // --- Função chamada ao clicar no botão "Enviar Instruções"
+  const handleSendInstructions = () => {
+    if (!email.trim()) {
+      Alert.alert("Erro", "Por favor, informe seu email.");
       return;
     }
 
-    if (!validateEmail(email)) {
-      setError("Digite um email válido.");
-      setLoading(false);
-      return;
-    }
+    // Aqui você chamaria sua API ou lógica de recuperação de senha
+    Alert.alert(
+      "Email enviado",
+      "Se esse email existir em nossa base, enviaremos instruções de recuperação."
+    );
 
-    // Simula envio do e-mail
-    await new Promise((r) => setTimeout(r, 1000));
-
-    setSuccess("Enviamos um link de recuperação para o seu email.");
-    setLoading(false);
+    router.back();
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Recuperar Senha</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Recuperar senha</Text>
 
-        <TextInput
-          placeholder="Digite seu email"
-          value={email}
-          onChangeText={setEmail}
-          style={styles.input}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
+      <Text style={styles.description}>
+        Digite o email associado à sua conta e enviaremos instruções para redefinir sua senha.
+      </Text>
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-        {success ? <Text style={styles.success}>{success}</Text> : null}
+      <TextInput
+        style={styles.input}
+        placeholder="Seu email"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+      />
 
-        <TouchableOpacity
-          onPress={handleReset}
-          style={[styles.button, loading && { opacity: 0.6 }]}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Enviar link</Text>
-          )}
-        </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={handleSendInstructions}>
+        <Text style={styles.buttonText}>Enviar instruções</Text>
+      </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.push("/login/Screens/loginScreen")}>
-          <Text style={styles.link}>Voltar ao login</Text>
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+      <TouchableOpacity onPress={() => router.back()}>
+        <Text style={styles.backToLogin}>Voltar ao login</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#dfedff",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  card: {
-    width: "85%",
-    backgroundColor: "#fff",
-    padding: 24,
-    borderRadius: 12,
-    elevation: 4,
+    paddingHorizontal: 24,
+    paddingTop: 100,
+    backgroundColor: "#DCEBFF",
   },
   title: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontWeight: "700",
+    color: "#2D5D9F", 
     marginBottom: 24,
-    textAlign: "center",
+  },
+  description: {
+    fontSize: 16,
+    color: "#555",
+    marginBottom: 32,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 12,
-    borderRadius: 8,
+    borderColor: "#BFD8FF", 
+    backgroundColor: "#FFFFFF",
+    padding: 14,
+    borderRadius: 10,
     marginBottom: 12,
+    fontSize: 16,
+    color: "#2D5D9F",
   },
   button: {
-    backgroundColor: "#007AFF",
-    padding: 15,
+    backgroundColor: "#7CB6FF",
+    paddingVertical: 14,
     borderRadius: 8,
-    marginTop: 10,
+    alignItems: "center",
+    marginBottom: 30,
   },
   buttonText: {
     color: "#fff",
-    textAlign: "center",
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "600",
   },
-  error: {
-    color: "red",
+  backToLogin: {
+    color: "#5A96E8",
+    fontSize: 16,
     textAlign: "center",
-    marginBottom: 10,
-  },
-  success: {
-    color: "green",
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  link: {
-    color: "#007AFF",
-    textAlign: "center",
-    marginTop: 10,
   },
 });

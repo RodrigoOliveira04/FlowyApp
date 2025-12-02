@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -17,11 +18,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
-  const validateEmail = (email: string) => {
-    return /\S+@\S+\.\S+/.test(email);
-  };
+  const validateEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
 
   const handleLogin = async () => {
     setError("");
@@ -39,16 +37,28 @@ export default function LoginScreen() {
       return;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const saved = await AsyncStorage.getItem("user_data");
 
-    if (
-      user === "user example" &&
-      email === "user@example.com" &&
-      password === "senha123"
-    ) {
-      router.replace("/diary/diary");
-    } else {
-      setError("Email ou senha inválidos");
+      if (!saved) {
+        setError("Nenhuma conta encontrada. Crie uma conta primeiro.");
+        setLoading(false);
+        return;
+      }
+
+      const storedUser = JSON.parse(saved);
+
+      if (
+        storedUser.username === user &&
+        storedUser.email === email &&
+        storedUser.password === password
+      ) {
+        router.replace("/diary/diary");
+      } else {
+        setError("Usuário, email ou senha incorretos.");
+      }
+    } catch (err) {
+      setError("Erro ao acessar dados. Tente novamente.");
     }
 
     setLoading(false);
@@ -57,19 +67,18 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Bem Vindo {user}</Text>
+        <Text style={styles.title}>Bem vindo {user}</Text>
 
         <TextInput
-          placeholder="nome de usuário"
+          placeholder="Nome de usuário"
           value={user}
           onChangeText={setUser}
           style={styles.input}
-          keyboardType="default"
           autoCapitalize="none"
         />
 
         <TextInput
-          placeholder="email"
+          placeholder="Email"
           value={email}
           onChangeText={setEmail}
           style={styles.input}
@@ -78,11 +87,11 @@ export default function LoginScreen() {
         />
 
         <TextInput
-          placeholder="senha"
+          placeholder="Senha"
+          secureTextEntry
           value={password}
           onChangeText={setPassword}
           style={styles.input}
-          secureTextEntry={!showPassword}
         />
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -103,7 +112,9 @@ export default function LoginScreen() {
           <Text style={styles.link}>Criar conta</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.push("/login/Screens/forgot-password")}>
+        <TouchableOpacity
+          onPress={() => router.push("/login/Screens/forgot-password")}
+        >
           <Text style={styles.link}>Esqueceu a senha?</Text>
         </TouchableOpacity>
       </View>
@@ -114,54 +125,71 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#dfedff",
+    backgroundColor: "#DCEBFF", 
     justifyContent: "center",
     alignItems: "center",
   },
+
   card: {
     width: "85%",
-    backgroundColor: "#fff",
+    backgroundColor: "#F9FBFF", 
     padding: 24,
-    borderRadius: 12,
-    elevation: 4,
+    borderRadius: 16,
+    elevation: 6,
     shadowColor: "#000",
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 6,
   },
+
   title: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontWeight: "700",
+    color: "#2D5D9F", 
     marginBottom: 24,
     textAlign: "center",
-    color: "#333",
   },
+
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 12,
-    borderRadius: 8,
+    borderColor: "#BFD8FF", 
+    backgroundColor: "#FFFFFF",
+    padding: 14,
+    borderRadius: 10,
     marginBottom: 12,
+    fontSize: 16,
+    color: "#2D5D9F",
   },
+
   button: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#7CB6FF", 
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 10,
     marginTop: 10,
   },
+
   buttonText: {
     color: "#fff",
-    fontWeight: "bold",
     textAlign: "center",
+    fontWeight: "600",
+    fontSize: 16,
   },
+
+  link: {
+    color: "#5A96E8", 
+    textAlign: "center",
+    marginTop: 15,
+    fontSize: 15,
+  },
+
   error: {
-    color: "red",
+    color: "#E57373",
     textAlign: "center",
     marginBottom: 10,
   },
-  link: {
-    color: "#007AFF",
+
+  success: {
+    color: "#4CAF50",
     textAlign: "center",
-    marginTop: 10,
-    fontWeight: "600",
+    marginBottom: 10,
   },
 });

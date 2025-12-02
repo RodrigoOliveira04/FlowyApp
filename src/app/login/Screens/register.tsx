@@ -1,6 +1,5 @@
-import { useRouter } from "expo-router";
-import { todayLocalISO } from "@/src/utils/date";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -11,7 +10,6 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
-import { useAuth } from "@/src/contexts/register/AuthContext";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -22,39 +20,43 @@ export default function RegisterScreen() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const today = todayLocalISO();
-  const [date] = useState(today);
-
   const validateEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
 
-  const { register } = useAuth();
+  const handleRegister = async () => {
+    setError("");
+    setLoading(true);
 
-const handleRegister = async () => {
-  if (!user || !email || !password) {
-    setError("Preencha todos os campos.");
-    return;
-  }
+    if (!user || !email || !password || !confirmPassword) {
+      setError("Preencha todos os campos.");
+      setLoading(false);
+      return;
+    }
 
-  const newUser = {
-    username: user,
-    email: email,
-    password: password,
-    createdAt: new Date().toISOString(),
+    if (!validateEmail(email)) {
+      setError("Digite um email válido.");
+      setLoading(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("As senhas não coincidem.");
+      setLoading(false);
+      return;
+    }
+
+    const newUser = {
+      username: user,
+      email,
+      password,
+      createdAt: new Date().toISOString(),
+    };
+
+    await AsyncStorage.setItem("user_data", JSON.stringify(newUser));
+
+    setLoading(false);
+
+    router.replace("/login/Screens/loginScreen");
   };
-
-  await AsyncStorage.setItem("user_data", JSON.stringify(newUser));
-
-  router.replace("/login/Screens/loginScreen");
-};
-
-const saved = await AsyncStorage.getItem("user_data");
-if (saved) {
-  const user = JSON.parse(saved);
-
-  if (user.email === email && user.password === password) {
-    // login OK
-  }
-};
 
   return (
     <KeyboardAvoidingView style={styles.container}>
@@ -72,9 +74,9 @@ if (saved) {
           placeholder="Email"
           value={email}
           onChangeText={setEmail}
-          style={styles.input}
           keyboardType="email-address"
           autoCapitalize="none"
+          style={styles.input}
         />
 
         <TextInput
@@ -97,14 +99,10 @@ if (saved) {
 
         <TouchableOpacity
           onPress={handleRegister}
-          style={[styles.button, loading && { opacity: 0.6 }]}
           disabled={loading}
+          style={[styles.button, loading && { opacity: 0.6 }]}
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Registrar</Text>
-          )}
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Registrar</Text>}
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.push("/login/Screens/loginScreen")}>
@@ -116,51 +114,50 @@ if (saved) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#dfedff",
-    justifyContent: "center",
-    alignItems: "center",
+  container: { flex: 1, 
+    backgroundColor: "#DCEBFF", 
+    justifyContent: "center", 
+    alignItems: "center" 
   },
-  card: {
-    width: "85%",
-    backgroundColor: "#fff",
-    padding: 24,
-    borderRadius: 12,
-    elevation: 4,
+  card: { width: "85%", 
+    backgroundColor: "#F9FBFF", 
+    padding: 24, 
+    borderRadius: 12, 
+    elevation: 4 
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 24,
-    textAlign: "center",
+  title: { fontSize: 28, 
+    fontWeight: "bold", 
+     color: "#2D5D9F", 
+    marginBottom: 24, 
+    textAlign: "center" 
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 12,
-    borderRadius: 8,
+    borderColor: "#BFD8FF", 
+    backgroundColor: "#FFFFFF",
+    padding: 14,
+    borderRadius: 10,
     marginBottom: 12,
+    fontSize: 16,
+    color: "#2D5D9F",
   },
-  button: {
-    backgroundColor: "#007AFF",
-    padding: 15,
-    borderRadius: 8,
-    marginTop: 10,
+  button: { backgroundColor: "#7CB6FF", 
+    padding: 15, 
+    borderRadius: 8, 
+    marginTop: 10 
   },
   buttonText: {
     color: "#fff",
-    fontWeight: "bold",
     textAlign: "center",
+    fontWeight: "600",
+    fontSize: 16,
   },
-  error: {
-    color: "red",
-    textAlign: "center",
-    marginBottom: 10,
+  error: { color: "red", 
+    textAlign: "center", 
+    marginBottom: 10 
   },
-  link: {
-    color: "#007AFF",
-    textAlign: "center",
-    marginTop: 10,
+  link: { color: "#007AFF", 
+    textAlign: "center", 
+    marginTop: 10 
   },
 });
