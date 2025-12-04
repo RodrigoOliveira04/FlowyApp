@@ -1,200 +1,113 @@
 // src/contexts/diary/EntriesContext.tsx
 
-import { todayLocalISO } from "@/src/utils/date";
+import { createContext, useContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { createContext, useContext, useEffect, useState } from "react";
 
-export type Entry = {
+export type EntryType = {
   id: string;
-  createdAt: string; // YYYY-MM-DD (imutável)
+  createdAt: string;      // ISO date
+  mood: "happy" | "neutral" | "sad" | "angry" | "anxious";
   text: string;
-  mood?: "happy" | "neutral" | "sad" | "angry" | "anxious";
-  createdAtIso?: string;
 };
 
 type EntriesContextType = {
-  entries: Entry[];
-  addEntry: (payload: {
-    text: string;
-    createdAt?: string;
-    mood?: Entry["mood"];
-  }) => Promise<void>; // <-- payload aceita mood
-  updateEntry: (
-    id: string,
-    payload: { text?: string; mood?: Entry["mood"] }
-  ) => Promise<void>;
-  deleteEntry: (id: string) => Promise<void>;
-  clearAll?: () => Promise<void>;
+  entries: EntryType[];
   loaded: boolean;
+  addEntry: (entry: Omit<EntryType, "id">) => Promise<void>;
 };
 
-const STORAGE_KEY = "flowy_entries_v1";
-const EntriesContext = createContext<EntriesContextType | undefined>(undefined);
+const EntriesContext = createContext<EntriesContextType>({
+  entries: [],
+  loaded: false,
+  addEntry: async () => {},
+});
 
-export const EntriesProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [entries, setEntries] = useState<Entry[]>([]);
+// ENTRADAS PADRÃO DO DIÁRIO (NEUTRAS)
+const DEFAULT_PLACEHOLDERS: EntryType[] = [
+  {
+    id: "placeholder-1",
+    createdAt: "2024-10-12",
+    mood: "neutral",
+    text: "Dia tranquilo. Nada especial, mas senti vontade de registrar.",
+  },
+  {
+    id: "placeholder-2",
+    createdAt: "2024-10-18",
+    mood: "neutral",
+    text: "Acordei cansado, mas consegui fazer tudo o que precisava.",
+  },
+  {
+    id: "placeholder-3",
+    createdAt: "2024-10-25",
+    mood: "neutral",
+    text: "Uma tarde silenciosa. Acho que foi bom ter um pouco de calma.",
+  },
+];
+
+const STORAGE_KEY = "@flowy_diary_entries";
+
+export function EntriesProvider({ children }: { children: React.ReactNode }) {
+  const [entries, setEntries] = useState<EntryType[]>([]);
   const [loaded, setLoaded] = useState(false);
 
-  const normalizeLoaded = (raw: any[]): Entry[] => {
-    return raw.map((e) => {
-      const id = e && e.id ? String(e.id) : String(Date.now());
-
-      // se já existe createdAt no formato YMD, preserve
-      if (
-        e &&
-        e.createdAt &&
-        typeof e.createdAt === "string" &&
-        /^\d{4}-\d{2}-\d{2}$/.test(e.createdAt)
-      ) {
-        return {
-          id,
-          createdAt: e.createdAt,
-          text: String(e.text ?? ""),
-          mood: e.mood ? (String(e.mood) as Entry["mood"]) : undefined,
-          createdAtIso: e.createdAtIso ? String(e.createdAtIso) : undefined,
-        };
-      }
-
-      // se existe createdAt em outro formato, tente extrair YMD
-      if (e && e.createdAt && typeof e.createdAt === "string") {
-        try {
-          const d = new Date(e.createdAt);
-          if (!isNaN(d.getTime())) {
-            const y = d.getFullYear();
-            const m = String(d.getMonth() + 1).padStart(2, "0");
-            const day = String(d.getDate()).padStart(2, "0");
-            return {
-              id,
-              createdAt: `${y}-${m}-${day}`,
-              text: String(e.text ?? ""),
-              createdAtIso: e.createdAt,
-            };
-          }
-        } catch {}
-      }
-
-      // se tem campo date (MM/DD/YYYY ou similar) -> tenta parse e converter
-      if (e && e.date && typeof e.date === "string") {
-        const parsed = new Date(e.date);
-        if (!isNaN(parsed.getTime())) {
-          const y = parsed.getFullYear();
-          const m = String(parsed.getMonth() + 1).padStart(2, "0");
-          const day = String(parsed.getDate()).padStart(2, "0");
-          return {
-            id,
-            createdAt: `${y}-${m}-${day}`,
-            text: String(e.text ?? ""),
-            createdAtIso: parsed.toISOString(),
-          };
-        }
-      }
-
-      // fallback — só aqui, quando realmente não existe data extraível
-      return {
-        id,
-        createdAt: todayLocalISO(),
-        text: String(e && e.text ? e.text : ""),
-        createdAtIso: new Date().toISOString(),
-      };
-    });
-  };
-
+  // Carrega do AsyncStorage com placeholders
   useEffect(() => {
     const load = async () => {
       try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          setEntries(Array.isArray(parsed) ? normalizeLoaded(parsed) : []);
+        const stored = await AsyncStorage.getItem(STORAGE_KEY);
+
+        if (stored) {
+          const parsed: EntryType[] = JSON.parse(stored);
+
+          // Se já existirem entradas → só usa elas
+          if (parsed.length > 0) {
+            setEntries(parsed);
+          } else {
+            // Se estiver vazio → cria placeholders
+            setEntries(DEFAULT_PLACEHOLDERS);
+            await AsyncStorage.setItem(
+              STORAGE_KEY,
+              JSON.stringify(DEFAULT_PLACEHOLDERS)
+            );
+          }
         } else {
-          setEntries([]);
+          // Primeiro uso → salva placeholders automaticamente
+          setEntries(DEFAULT_PLACEHOLDERS);
+          await AsyncStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(DEFAULT_PLACEHOLDERS)
+          );
         }
+
       } catch (err) {
-        console.warn("Erro ao carregar entries do storage:", err);
-        setEntries([]);
-      } finally {
-        setLoaded(true);
+        console.warn("Erro carregando diário:", err);
+        setEntries(DEFAULT_PLACEHOLDERS);
       }
+
+      setLoaded(true);
     };
+
     load();
   }, []);
 
-  const persist = async (next: Entry[]) => {
-    setEntries(next);
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch (err) {
-      console.warn("Erro ao persistir entries no storage:", err);
-      throw err;
-    }
-  };
-
-  const addEntry = async (payload: {
-    text: string;
-    createdAt?: string;
-    mood?: Entry["mood"];
-  }) => {
-    const createdAt =
-      payload.createdAt && /^\d{4}-\d{2}-\d{2}$/.test(payload.createdAt)
-        ? payload.createdAt
-        : todayLocalISO();
-    const newEntry: Entry = {
-      id: String(Date.now()),
-      text: payload.text,
-      createdAt,
-      mood: payload.mood, // <-- guarda o mood
-      createdAtIso: new Date().toISOString(),
+  // Adiciona nova entrada
+  const addEntry = async (entry: Omit<EntryType, "id">) => {
+    const newEntry: EntryType = {
+      id: Math.random().toString(36).substring(2),
+      ...entry,
     };
 
-    setEntries((prev) => {
-      const next = [newEntry, ...prev];
-      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next)).catch((err) => {
-        console.warn("Erro ao persistir entries no storage (addEntry):", err);
-      });
-      return next;
-    });
-  };
+    const updated = [newEntry, ...entries];
+    setEntries(updated);
 
-  const updateEntry = async (
-    id: string,
-    payload: { text?: string; mood?: Entry["mood"] }
-  ) => {
-    const next = entries.map((e) =>
-      e.id === id
-        ? { ...e, text: payload.text ?? e.text, mood: payload.mood ?? e.mood }
-        : e
-    );
-    await persist(next);
-  };
-
-  const deleteEntry = async (id: string) => {
-    const next = entries.filter((e) => e.id !== id);
-    await persist(next);
-  };
-
-  const clearAll = async () => {
-    try {
-      await AsyncStorage.removeItem(STORAGE_KEY);
-      setEntries([]);
-    } catch (err) {
-      console.warn("Erro ao limpar storage:", err);
-      throw err;
-    }
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   };
 
   return (
-    <EntriesContext.Provider
-      value={{ entries, addEntry, updateEntry, deleteEntry, clearAll, loaded }}
-    >
+    <EntriesContext.Provider value={{ entries, loaded, addEntry }}>
       {children}
     </EntriesContext.Provider>
   );
-};
-
-export function useEntries() {
-  const ctx = useContext(EntriesContext);
-  if (!ctx) throw new Error("useEntries must be used within EntriesProvider");
-  return ctx;
 }
+
+export const useEntries = () => useContext(EntriesContext);
