@@ -7,7 +7,10 @@ export interface User {
     codDiarioUsuario: string,
     idPerfil: string,
     Email: string,
-    Token: string
+    Token: string,
+    avatar?: string,
+    infoPerfil?: string,
+    qtdXp?: number
 }
 
 export interface RegistrarUserPayload {
