@@ -11,8 +11,8 @@ export default function Home() {
                     <Text style={styles.buttonText}>Ir ao perfil</Text>
                 </TouchableOpacity>
             </Link>
-            <br></br>
-            <Link href="/diary/diary">
+            <View style={{ height: 16 }} /> {/* Espaço vertical */}
+            <Link href="/diary/diary" asChild>
                 <TouchableOpacity style={styles.button}>
                     <Text style={styles.buttonText}>Ir ao diário</Text>
                 </TouchableOpacity>

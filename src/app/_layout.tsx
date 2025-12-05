@@ -1,9 +1,12 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { EntriesProvider } from "@/src/contexts/diary/EntriesContext";
+
 
 export default function Layout() {
     return (
+        <EntriesProvider>
         <SafeAreaProvider>
             <Stack>
                 <Stack.Screen name="index" options={{ title: 'Home' }} />
@@ -12,5 +15,6 @@ export default function Layout() {
                 <Stack.Screen name="profile/settings" options={{ title: 'Settings' }} />
             </Stack>
         </SafeAreaProvider>
+        </EntriesProvider>
     );
 }

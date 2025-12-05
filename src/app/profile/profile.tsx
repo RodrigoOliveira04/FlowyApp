@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator,
+    Dimensions } from 'react-native';
+import { useEntries, EntriesProvider } from "@/src/contexts/diary/EntriesContext";
+import { BarChart } from "react-native-chart-kit";
 import { Link, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import Avatar from '../../components/Profile/Avatar';
@@ -11,6 +14,22 @@ export default function ProfilePage() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+    const { entries } = useEntries();
+
+    // Contar frequência dos valores de humor
+    const moodCounts: Record<string, number> = {};
+    entries.forEach(entry => {
+        if (entry.mood) {
+            moodCounts[entry.mood] = (moodCounts[entry.mood] || 0) + 1;
+        }
+    });
+
+    // Preparar dados para o gráfico
+    const moods = Object.keys(moodCounts);
+    const counts = moods.map(mood => moodCounts[mood]);
+    const mostFrequentMood = moods.length > 0
+        ? moods[counts.indexOf(Math.max(...counts))]
+        : null;
 
     useFocusEffect(
         React.useCallback(() => {
@@ -65,6 +84,36 @@ export default function ProfilePage() {
             <View style={{ marginTop: 20 }}>
                 <ProfileCard bio={user.infoPerfil} progress={user.qtdXp} />
             </View>
+
+             {moods.length > 0 && (
+                <View style={{ marginTop: 32 }}>
+                    <Text style={{ fontWeight: "bold", fontSize: 16, marginBottom: 8, textAlign: "center" }}>
+                        Humor mais frequente: {mostFrequentMood}
+                    </Text>
+                    <BarChart
+                        data={{
+                            labels: moods,
+                            datasets: [{ data: counts }],
+                        }}
+                        width={Dimensions.get("window").width - 40}
+                        height={220}
+                        yAxisLabel=""
+                        yAxisSuffix=""
+                        chartConfig={{
+                            backgroundColor: "#fff",
+                            backgroundGradientFrom: "#e9eef8",
+                            backgroundGradientTo: "#e9eef8",
+                            decimalPlaces: 0,
+                            color: (opacity = 1) => `rgba(79, 70, 229, ${opacity})`,
+                            labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
+                            style: { borderRadius: 16 },
+                        }}
+                        style={{ borderRadius: 16 }}
+                        fromZero
+                        showValuesOnTopOfBars
+                    />
+                </View>
+            )}
 
             <View style={styles.actions}>
                 <Link href="/profile/edit" asChild>
