@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Flowy - Calendário</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div>
+        <h1 class="site-title">Flowy</h1>
+        <p class="subtitle">Seu calendário emocional — visualize e gerencie eventos</p>
+      </div>
+      <div class="header-actions">
+        <button id="todayBtn" class="btn">Hoje</button>
+        <button id="newEventBtn" class="btn primary">+ Novo Evento</button>
+      </div>
+    </header>
+
+    <main class="main-grid">
+      <section class="calendar-section">
+        <div class="calendar-header">
+          <button id="prevMonth" class="nav-btn">◀</button>
+          <div id="monthLabel" class="month-label"></div>
+          <button id="nextMonth" class="nav-btn">▶</button>
+        </div>
+
+        <div class="weekdays">
+          <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+        </div>
+
+        <div id="calendarGrid" class="calendar-grid"></div>
+      </section>
+
+      <aside class="sidebar">
+        <div class="selected-info">
+          <div id="selectedDateLabel" class="selected-date"></div>
+          <div id="eventsCount" class="events-count"></div>
+        </div>
+        <div id="eventsList" class="events-list"></div>
+        <div class="sidebar-actions">
+          <button id="clearBtn" class="btn">Limpar Tudo</button>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div id="modalBackdrop" class="modal-backdrop hidden">
+    <div class="modal">
+      <h2 id="modalTitle">Novo evento</h2>
+      <label>Título</label>
+      <input id="eventTitle" type="text" placeholder="Ex: Meditação" />
+      <label>Data</label>
+      <input id="eventDate" type="date" />
+      <label>Horário (opcional)</label>
+      <input id="eventTime" type="time" />
+      <div class="modal-actions">
+        <button id="cancelModal" class="btn">Cancelar</button>
+        <button id="saveModal" class="btn primary">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
