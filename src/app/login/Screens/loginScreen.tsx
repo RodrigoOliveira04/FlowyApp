@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
+import { signIn } from "../../../services/authService";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -38,30 +39,44 @@ export default function LoginScreen() {
     }
 
     try {
-      const saved = await AsyncStorage.getItem("user_data");
+    // lê lista de usuários (prioridade)
+    const rawList = await AsyncStorage.getItem('users');
+    const users: any[] = rawList ? JSON.parse(rawList) : [];
 
-      if (!saved) {
-        setError("Nenhuma conta encontrada. Crie uma conta primeiro.");
-        setLoading(false);
-        return;
+    // tenta encontrar por email/username
+    const found = users.find(u =>
+      (String(u.Email ?? u.email ?? '').toLowerCase() === email.trim().toLowerCase() ||
+       String(u.Username ?? u.username ?? '').toLowerCase() === email.trim().toLowerCase())
+      &&
+      ((u.PasswordString ?? u.password ?? '') === password)
+    );
+
+    // fallback para user_data (legado)
+    let userObj = found;
+    if (!userObj) {
+      const rawSingle = await AsyncStorage.getItem('user_data');
+      if (rawSingle) {
+        const parsed = JSON.parse(rawSingle);
+        const emailMatch = (String(parsed.Email ?? parsed.email ?? parsed.Username ?? '').toLowerCase() === email.trim().toLowerCase());
+        const passMatch = (parsed.PasswordString ?? parsed.password ?? '') === password;
+        if (emailMatch && passMatch) userObj = parsed;
       }
-
-      const storedUser = JSON.parse(saved);
-
-      if (
-        storedUser.username === user &&
-        storedUser.email === email &&
-        storedUser.password === password
-      ) {
-        router.replace("/diary/diary");
-      } else {
-        setError("Usuário, email ou senha incorretos.");
-      }
-    } catch (err) {
-      setError("Erro ao acessar dados. Tente novamente.");
     }
 
+    if (!userObj) {
+      setError('Usuário ou senha incorretos.');
+      return;
+    }
+
+    // grava estado de autenticação e notifica o app
+    await signIn(userObj);
+    router.replace('/profile/profile');
+  } catch (err) {
+    console.error('login error', err);
+    setError('Erro ao efetuar login. Tente novamente.');
+  } finally {
     setLoading(false);
+  }
   };
 
   return (
@@ -108,12 +123,12 @@ export default function LoginScreen() {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.push("/login/Screens/register")}>
+        <TouchableOpacity onPress={() => router.push("../Screens/register")}>
           <Text style={styles.link}>Criar conta</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push("/login/Screens/forgot-password")}
+          onPress={() => router.push("../Screens/forgot-password")}
         >
           <Text style={styles.link}>Esqueceu a senha?</Text>
         </TouchableOpacity>

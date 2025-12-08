@@ -48,7 +48,7 @@ export default function Exercicios() {
             <TouchableOpacity
               key={a.key}
               style={styles.activityCard}
-              onPress={() => router.push(a.route)}
+              onPress={() => router.push(a.route as any)}
             >
               <View style={{ flex: 1 }}>
                 <Text style={styles.activityTitle}>{a.title}</Text>
@@ -69,7 +69,7 @@ export default function Exercicios() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f3f7ff",
+    backgroundColor: "#DCEBFF",
     alignItems: "center",
     justifyContent: "center",
     paddingTop: 24,

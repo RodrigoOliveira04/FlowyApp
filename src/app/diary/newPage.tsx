@@ -78,7 +78,13 @@ export default function NewPage() {
               ]}
             >
               <Text style={styles.moodEmoji}>{m.emoji}</Text>
-              <Text style={styles.moodLabel}>{m.label}</Text>
+              <Text
+                style={styles.moodLabel}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}>
+                {m.label}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -102,7 +108,7 @@ export default function NewPage() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#fff" },
+  container: { flex: 1, padding: 20, backgroundColor: "#DCEBFF" },
   form: { flex: 1 },
   label: { marginBottom: 6, fontWeight: "600" },
   input: {
@@ -122,9 +128,9 @@ const styles = StyleSheet.create({
   },
   moodButton: {
     alignItems: "center",
-    padding: 8,
+    padding: 6,
     flex: 1,
-    marginHorizontal: 4,
+    marginHorizontal: 6,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#eee",
@@ -135,5 +141,5 @@ const styles = StyleSheet.create({
     backgroundColor: "#e6f7fb",
   },
   moodEmoji: { fontSize: 22 },
-  moodLabel: { fontSize: 12, marginTop: 4 },
+  moodLabel: { fontSize: 11, marginTop: 4 },
 });

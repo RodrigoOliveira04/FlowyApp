@@ -184,7 +184,7 @@ export default function EditEntry() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#fff" },
+  container: { flex: 1, padding: 20, backgroundColor: "#DCEBFF" },
   form: { flex: 1 },
   label: { marginBottom: 6, fontWeight: "600" },
   readonlyDate: { marginBottom: 12, color: "#333" },
