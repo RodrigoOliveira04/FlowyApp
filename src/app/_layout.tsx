@@ -8,6 +8,7 @@ import { onAuthStateChanged } from '../services/authService';
 import { User } from '../api/types/user';
 
 
+
 export default function RootLayout() {
     const [user, setUser] = useState<User | null>(null);
     const [initializing, setInitializing] = useState(true);
@@ -43,3 +44,4 @@ const styles = StyleSheet.create({
     // opcional styling de header
   },
 });
+
